@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff4fa3" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Tripex — Trip Expense Tracker</title>
+  <style>
+    :root{
+      --bg:#fff0f7;
+      --bg-elev:#ffe3f0;
+      --paper:#fff8fc;
+      --paper-2:#ffeaf4;
+      --paper-3:#ffd7e9;
+      --ink:#45132d;
+      --ink-soft:#6d2b4b;
+      --muted:#9b6480;
+      --line:#f3c8dc;
+      --green:#ff4fa3;
+      --green-dark:#e62d88;
+      --green-soft:rgba(255,79,163,.12);
+      --green-soft-2:rgba(255,79,163,.19);
+      --danger:#c91658;
+      --danger-soft:rgba(201,22,88,.11);
+      --amber:#ef78b1;
+      --shadow:0 22px 60px rgba(156,36,94,.15);
+      --shadow-soft:0 10px 28px rgba(156,36,94,.10);
+      --radius:24px;
+      --radius-sm:16px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:#fff0f7}
+    body{
+      margin:0;
+      min-height:100vh;
+      min-height:100dvh;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+      color:var(--ink);
+      background:#f7bfd9;
+      overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+      -webkit-tap-highlight-color:transparent;
+    }
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    button,input,select{-webkit-tap-highlight-color:transparent}
+    .ambient{
+      position:fixed;inset:0;z-index:-3;overflow:hidden;
+      background:
+        radial-gradient(circle at 12% 12%,rgba(255,244,250,.92),transparent 26%),
+        radial-gradient(circle at 88% 16%,rgba(255,115,185,.30),transparent 25%),
+        radial-gradient(circle at 52% 84%,rgba(235,49,138,.20),transparent 31%),
+        linear-gradient(145deg,#ffd6e9 0%,#ffb9da 42%,#f69bc8 100%);
+    }
+    .ambient:before,.ambient:after{
+      content:"";position:absolute;border-radius:50%;filter:blur(50px);opacity:.46;
+      animation:drift 17s ease-in-out infinite alternate;
+    }
+    .ambient:before{width:38vw;height:38vw;left:-10vw;top:-8vw;background:#fff4fa}
+    .ambient:after{width:30vw;height:30vw;right:-7vw;bottom:2vh;background:#ff5ba8;animation-delay:-7s}
+    @keyframes drift{to{transform:translate3d(4vw,4vh,0) scale(1.08)}}
+
+    .app{
+      width:min(1180px,calc(100% - 34px));
+      min-height:calc(100vh - 34px);
+      min-height:calc(100dvh - 34px);
+      margin:17px auto;
+      background:linear-gradient(180deg,rgba(255,246,251,.97),rgba(255,237,246,.98));
+      border-radius:36px;
+      overflow:hidden;
+      box-shadow:0 32px 100px rgba(133,27,79,.22);
+      position:relative;
+      border:1px solid rgba(255,255,255,.68);
+    }
+
+    .appbar{
+      height:74px;
+      padding:0 24px;
+      background:rgba(255,244,250,.80);
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      border-bottom:1px solid rgba(199,73,132,.10);
+      position:sticky;top:0;z-index:20;
+      backdrop-filter:blur(22px) saturate(1.15);
+      -webkit-backdrop-filter:blur(22px) saturate(1.15);
+    }
+    .bar-left,.bar-right{display:flex;align-items:center;gap:10px;min-width:60px}
+    .bar-right{justify-content:flex-end}
+    .screen-title{font-size:18px;font-weight:790;letter-spacing:-.03em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+    .icon-btn{
+      width:42px;height:42px;border:1px solid rgba(213,74,140,.12);border-radius:50%;background:rgba(255,255,255,.54);color:var(--ink);display:grid;place-items:center;font-size:21px;transition:.18s ease;box-shadow:0 5px 16px rgba(156,36,94,.06)
+    }
+    .icon-btn:hover{background:#fff;border-color:rgba(213,74,140,.22);transform:translateY(-1px)}
+    .avatar{width:35px;height:35px;border-radius:50%;background:linear-gradient(145deg,#ff78b9,#ee3e95);color:white;display:grid;place-items:center;font-size:13px;font-weight:900;box-shadow:0 7px 18px rgba(230,45,136,.20)}
+
+    #appContent{padding:0 24px 122px}
+    .page{animation:pageIn .24s ease}
+    @keyframes pageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+    .section{padding-top:24px}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px}
+    .section-head h2{font-size:21px;margin:0;letter-spacing:-.04em;color:var(--ink)}
+    .section-head p{margin:5px 0 0;color:var(--muted);font-size:12px}
+    .pill-btn{
+      border:1px solid rgba(219,82,146,.13);background:rgba(255,255,255,.72);color:var(--ink);box-shadow:0 6px 18px rgba(156,36,94,.06);padding:9px 14px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;transition:.16s ease
+    }
+    .pill-btn:hover{background:#fff;transform:translateY(-1px)}
+    .pill-btn.green{background:linear-gradient(180deg,#ff63ad,var(--green-dark));color:white;border:0}
+
+    .trip-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+    .trip-card{
+      border:1px solid rgba(219,82,146,.12);background:linear-gradient(180deg,#fff9fc,#ffe9f3);border-radius:22px;overflow:hidden;text-align:left;padding:0;color:inherit;box-shadow:var(--shadow-soft);transition:.2s ease;
+    }
+    .trip-card:hover{transform:translateY(-3px);border-color:rgba(230,45,136,.28);box-shadow:0 16px 34px rgba(156,36,94,.13)}
+    .trip-card-copy{padding:18px;min-height:154px;display:flex;flex-direction:column;justify-content:flex-end}
+    .trip-card-copy h3{font-size:17px;margin:0 0 7px;letter-spacing:-.03em;color:var(--ink)}
+    .trip-card-copy p{font-size:11px;color:var(--muted);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mini-progress{height:8px;background:#f8cee1;border-radius:99px;margin-top:16px;overflow:hidden}
+    .mini-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff74b8,#e62d88)}
+    .mini-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--muted);font-weight:700}
+
+    .empty-home{min-height:calc(100vh - 210px);min-height:calc(100dvh - 210px);display:grid;place-items:center;text-align:center;padding:30px 0}
+    .empty-add{
+      width:min(370px,88vw);min-height:240px;border:1.5px dashed rgba(230,45,136,.28);border-radius:32px;background:linear-gradient(180deg,rgba(255,250,253,.92),rgba(255,227,240,.88));display:grid;place-items:center;padding:34px;box-shadow:var(--shadow-soft);color:var(--ink);transition:.18s ease
+    }
+    .empty-add:hover{transform:translateY(-2px);border-color:rgba(230,45,136,.46);background:#fff9fc}
+    .add-circle{width:82px;height:82px;border-radius:50%;background:linear-gradient(145deg,#ff76b8,#ec328c);color:white;display:grid;place-items:center;font-size:35px;margin:0 auto 18px;box-shadow:0 16px 34px rgba(230,45,136,.24);font-weight:900}
+    .empty-add strong{font-size:23px;display:block;color:var(--ink);margin-bottom:7px;letter-spacing:-.035em}
+    .empty-add span{font-size:12px;color:var(--muted)}
+
+    .trip-list{display:grid;gap:14px;padding-top:22px}
+    .trip-row{
+      display:grid;grid-template-columns:1fr;min-height:132px;background:linear-gradient(180deg,#fff9fc,#ffe9f3);border:1px solid rgba(219,82,146,.12);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-soft);color:inherit;text-align:left;padding:0;transition:.18s ease
+    }
+    .trip-row:hover{transform:translateY(-2px);border-color:rgba(230,45,136,.26)}
+    .trip-row-copy{padding:18px 19px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;min-height:118px}
+    .trip-row-copy h3{margin:0 0 9px;font-size:19px;letter-spacing:-.04em;color:var(--ink)}
+    .meta-line{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-top:6px}
+    .status{font-size:9px;font-weight:850;padding:6px 9px;border-radius:999px;background:#f5cee1;color:#8f3b63;white-space:nowrap;border:1px solid rgba(211,74,139,.08)}
+    .status.ongoing{background:#ffd1e7;color:#c21a67}
+    .status.completed{background:#f0c5d9;color:#7f4963}
+    .status.planned{background:#ffe2ef;color:#a43e70}
+
+    .detail-wrap{max-width:920px;margin:0 auto}
+    .detail-info{
+      width:calc(100% - 34px);margin:18px auto 0;position:relative;z-index:3;background:linear-gradient(180deg,#fffafd,#ffeaf4);border-radius:24px;padding:20px;box-shadow:var(--shadow-soft);border:1px solid rgba(219,82,146,.12)
+    }
+    .detail-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .detail-title-row h1{font-size:24px;margin:0;letter-spacing:-.05em;color:var(--ink)}
+    .detail-meta{display:grid;gap:8px;margin-top:12px}
+    .detail-meta .meta-line{font-size:12px;margin:0}
+
+    .budget-card{
+      margin-top:18px;background:linear-gradient(180deg,#fff9fc,#ffe8f3);border:1px solid rgba(219,82,146,.12);border-radius:26px;padding:20px;box-shadow:var(--shadow-soft)
+    }
+    .budget-top{display:flex;align-items:flex-start;justify-content:space-between;gap:15px}
+    .budget-top h3{margin:0 0 4px;font-size:15px;color:var(--ink-soft)}
+    .budget-top p{margin:0;color:var(--muted);font-size:11px;line-height:1.45}
+    .budget-money{text-align:right}
+    .budget-money strong{display:block;font-size:31px;letter-spacing:-.055em;color:var(--ink)}
+    .budget-money span{font-size:10px;color:var(--muted)}
+    .progress{height:13px;border-radius:99px;background:#f5cade;overflow:hidden;margin-top:17px}
+    .progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff7bbb,#e62d88);transition:width .35s ease, background .2s ease}
+    .progress>span.warn{background:linear-gradient(90deg,#e8407d,#bb124f)}
+    .progress-labels{display:flex;justify-content:space-between;margin-top:8px;color:var(--muted);font-size:10px;font-weight:750}
+    .budget-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}
+    .budget-stat{background:rgba(255,255,255,.60);padding:12px;border-radius:17px;border:1px solid rgba(219,82,146,.09)}
+    .budget-stat span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.07em;font-weight:850}
+    .budget-stat strong{display:block;margin-top:5px;font-size:14px;color:var(--ink)}
+
+    .tip-card{
+      margin-top:14px;border-radius:19px;padding:15px;display:flex;gap:12px;align-items:flex-start;background:rgba(255,117,184,.13);border:1px solid rgba(230,45,136,.14)
+    }
+    .tip-card.over{background:rgba(201,22,88,.10);border-color:rgba(201,22,88,.18)}
+    .tip-icon{width:36px;height:36px;flex:0 0 auto;border-radius:12px;background:rgba(255,255,255,.68);display:grid;place-items:center;box-shadow:0 5px 14px rgba(156,36,94,.06);color:#c11968;font-weight:900}
+    .tip-card strong{display:block;font-size:12px;margin-bottom:4px;color:var(--ink)}
+    .tip-card p{font-size:11px;color:var(--ink-soft);line-height:1.48;margin:0}
+
+    .expense-section{padding-top:23px}
+    .expense-category{background:linear-gradient(180deg,#fff9fc,#ffeaf4);border:1px solid rgba(219,82,146,.12);border-radius:20px;margin-bottom:13px;overflow:hidden;box-shadow:var(--shadow-soft)}
+    .category-head{display:grid;grid-template-columns:1fr auto;gap:15px;padding:15px 16px;border-bottom:1px solid rgba(211,74,139,.09)}
+    .category-head h3{margin:0;font-size:14px;letter-spacing:-.025em;color:var(--ink)}
+    .category-head p{margin:4px 0 0;font-size:10px;color:var(--muted)}
+    .category-money{text-align:right}
+    .category-money strong{display:block;font-size:13px;color:var(--ink)}
+    .category-money span{font-size:9px;color:var(--muted)}
+    .cat-progress{height:6px;background:#f5cade}
+    .cat-progress span{display:block;height:100%;background:linear-gradient(90deg,#ff7bbb,#e62d88)}
+    .cat-progress span.over{background:linear-gradient(90deg,#e8407d,#bb124f)}
+    .expense-row{display:grid;grid-template-columns:1fr auto 34px;gap:10px;align-items:center;padding:14px 16px;border-top:1px solid rgba(211,74,139,.08)}
+    .expense-row:first-child{border-top:0}
+    .expense-name{min-width:0}
+    .expense-name strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+    .expense-name span{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+    .expense-amount{font-size:12px;font-weight:850;color:var(--ink)}
+    .delete-expense{width:30px;height:30px;border:0;border-radius:10px;background:transparent;color:#b2678a}
+    .delete-expense:hover{background:var(--danger-soft);color:var(--danger)}
+    .no-expense{padding:17px;color:var(--muted);font-size:11px;text-align:center}
+    .add-line{width:100%;border:0;border-top:1px solid rgba(211,74,139,.08);background:rgba(255,255,255,.42);color:#c3196b;font-size:11px;font-weight:850;padding:12px}
+    .add-line:hover{background:#fff5fa}
+
+    .fab{
+      position:fixed;left:50%;bottom:37px;transform:translateX(-50%);z-index:42;width:54px;height:54px;border-radius:50%;border:4px solid rgba(255,241,248,.92);background:linear-gradient(145deg,#ff6ab1,#e62d88);color:white;display:grid;place-items:center;font-size:28px;font-weight:900;box-shadow:0 13px 29px rgba(218,41,125,.28)
+    }
+    .bottom-nav{
+      position:fixed;z-index:40;left:50%;bottom:20px;transform:translateX(-50%);width:min(560px,calc(100% - 40px));height:72px;border-radius:29px;background:rgba(255,247,251,.90);border:1px solid rgba(255,255,255,.82);box-shadow:0 16px 38px rgba(156,36,94,.16);display:grid;grid-template-columns:1fr 1fr 74px 1fr 1fr;align-items:center;padding:0 12px;backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)
+    }
+    .nav-item{border:0;background:transparent;color:#aa7891;display:grid;place-items:center;gap:3px;font-size:9px;font-weight:750;height:54px;border-radius:17px;transition:.16s ease}
+    .nav-item .nav-glyph{font-size:18px;line-height:1}
+    .nav-item.active{color:#d31d73;background:rgba(255,79,163,.10)}
+    .nav-item:hover{color:#a80f5a;background:rgba(255,79,163,.07)}
+    .nav-spacer{pointer-events:none}
+
+    .modal-layer{position:fixed;inset:0;z-index:80;background:rgba(100,22,59,.28);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:grid;place-items:center;padding:18px;opacity:0;pointer-events:none;transition:.2s ease}
+    .modal-layer.show{opacity:1;pointer-events:auto}
+    .modal{width:min(650px,100%);max-height:min(90vh,850px);max-height:min(90dvh,850px);overflow:auto;background:linear-gradient(180deg,#fffafd,#ffeaf4);border:1px solid rgba(255,255,255,.74);border-radius:30px;box-shadow:0 28px 80px rgba(133,27,79,.22);transform:translateY(12px);transition:.2s ease}
+    .modal-layer.show .modal{transform:none}
+    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:22px 22px 10px}
+    .modal-head h2{margin:0;font-size:22px;letter-spacing:-.04em;color:var(--ink)}
+    .modal-head p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+    .modal-close{width:36px;height:36px;border:1px solid rgba(219,82,146,.12);border-radius:50%;background:rgba(255,255,255,.62);color:#9b5577;font-size:20px}
+    .modal-body{padding:10px 22px 22px}
+    .fields{display:grid;grid-template-columns:1.5fr .7fr;gap:11px}
+    .field{display:grid;gap:6px}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:850;color:var(--muted)}
+    .field input,.field select{width:100%;border:1px solid rgba(219,82,146,.14);border-radius:15px;background:rgba(255,255,255,.75);padding:12px 13px;outline:none;color:var(--ink)}
+    .field input:focus,.field select:focus{border-color:rgba(230,45,136,.46);box-shadow:0 0 0 4px rgba(255,79,163,.10)}
+    .builder{margin-top:18px}
+    .builder-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+    .builder-title strong{font-size:12px;color:var(--ink)}
+    .small-btn{border:0;border-radius:999px;background:rgba(255,79,163,.11);color:#bd1765;padding:8px 11px;font-size:10px;font-weight:850}
+    .cat-row{display:grid;grid-template-columns:1fr 140px 36px;gap:8px;margin-bottom:8px}
+    .cat-row input{width:100%;border:1px solid rgba(219,82,146,.14);border-radius:13px;padding:11px 12px;background:rgba(255,255,255,.74);outline:none;color:var(--ink)}
+    .remove-cat{border:0;border-radius:11px;background:var(--danger-soft);color:var(--danger)}
+    .builder-total{display:flex;justify-content:space-between;padding-top:13px;margin-top:5px;border-top:1px solid rgba(211,74,139,.11);font-size:12px;color:var(--ink)}
+    .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:19px}
+    .btn{border:0;border-radius:15px;padding:11px 15px;font-weight:850;font-size:12px;min-height:42px}
+    .btn.secondary{background:rgba(255,255,255,.67);color:var(--ink);border:1px solid rgba(219,82,146,.12)}
+    .btn.primary{background:linear-gradient(145deg,#ff62ac,#e62d88);color:white;box-shadow:0 9px 19px rgba(230,45,136,.20)}
+    .btn.danger{background:var(--danger-soft);color:var(--danger);margin-right:auto}
+
+    .toast{position:fixed;z-index:100;right:24px;top:90px;background:#6c2145;color:#fff7fb;border:1px solid rgba(255,255,255,.13);border-radius:15px;padding:12px 15px;font-size:11px;box-shadow:0 14px 34px rgba(107,28,66,.22);opacity:0;transform:translateY(-8px);pointer-events:none;transition:.2s ease}
+    .toast.show{opacity:1;transform:none}
+
+    /* The former travel illustration areas remain disabled. */
+    .hero-art,.hero-home,.trip-card-art,.trip-row-art,.detail-hero{display:none!important}
+
+    @media(max-width:820px){
+      body{background:var(--bg)}
+      .ambient{display:none}
+      .app{width:100%;min-height:100vh;min-height:100dvh;margin:0;border-radius:0;box-shadow:none;border:0;background:linear-gradient(180deg,#fff3f9,#ffe7f2)}
+      .appbar{height:68px;padding:0 16px}
+      #appContent{padding:0 14px 112px}
+      .trip-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+      .trip-row{min-height:120px}
+      .trip-row-copy{padding:15px 14px}
+      .trip-row-copy h3{font-size:17px}
+      .bottom-nav{bottom:14px;width:calc(100% - 24px)}
+      .fab{bottom:31px}
+      .detail-info{width:100%;margin:16px auto 0;padding:18px}
+    }
+
+    /* iPhone 17 Pro optimized: 1206 x 2622 physical pixels / 3 ≈ 402 x 874 CSS px. */
+    @media(max-width:430px){
+      html,body{background:#fff0f7}
+      body{min-width:320px;overscroll-behavior-y:none}
+      .app{min-height:100dvh;background:linear-gradient(180deg,#fff5fa 0%,#ffe8f3 100%)}
+      .appbar{
+        height:calc(60px + env(safe-area-inset-top));
+        min-height:60px;
+        padding-top:env(safe-area-inset-top);
+        padding-left:max(14px,env(safe-area-inset-left));
+        padding-right:max(14px,env(safe-area-inset-right));
+      }
+      .bar-left,.bar-right{min-width:48px}
+      .screen-title{font-size:17px;letter-spacing:-.035em}
+      .icon-btn{width:42px;height:42px}
+      #appContent{
+        padding-top:0;
+        padding-left:max(14px,env(safe-area-inset-left));
+        padding-right:max(14px,env(safe-area-inset-right));
+        padding-bottom:calc(116px + env(safe-area-inset-bottom));
+      }
+      .section{padding-top:20px}
+      .section-head{align-items:flex-end;margin-bottom:13px}
+      .section-head h2{font-size:21px}
+      .section-head p{font-size:11px;line-height:1.35}
+      .pill-btn{padding:9px 12px;font-size:11px}
+      .trip-grid{grid-template-columns:1fr;gap:12px}
+      .trip-card{border-radius:22px}
+      .trip-card-copy{min-height:142px;padding:20px}
+      .trip-card-copy h3{font-size:19px}
+      .trip-card-copy p{font-size:11px}
+      .mini-progress{margin-top:17px;height:8px}
+      .trip-list{padding-top:16px;gap:12px}
+      .trip-row{border-radius:22px}
+      .trip-row-copy{min-height:124px;padding:17px 16px;grid-template-columns:minmax(0,1fr) auto}
+      .trip-row-copy h3{font-size:18px}
+      .meta-line{font-size:10.5px;gap:7px}
+      .status{font-size:8px;padding:5px 7px}
+      .empty-home{min-height:calc(100dvh - 190px);padding:18px 0}
+      .empty-add{width:100%;min-height:225px;padding:28px;border-radius:28px}
+      .add-circle{width:74px;height:74px;font-size:31px}
+      .empty-add strong{font-size:22px}
+      .detail-info{width:100%;margin:14px 0 0;padding:18px;border-radius:23px}
+      .detail-title-row h1{font-size:23px}
+      .detail-meta{gap:7px}
+      .detail-meta .meta-line{font-size:11px}
+      .budget-card{margin-top:13px;padding:18px;border-radius:23px}
+      .budget-top{gap:10px}
+      .budget-top h3{font-size:14px}
+      .budget-top p{font-size:10px;max-width:155px}
+      .budget-money strong{font-size:27px}
+      .progress{height:12px;margin-top:15px}
+      .budget-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:13px}
+      .budget-stat{padding:10px 9px;border-radius:15px;min-width:0}
+      .budget-stat span{font-size:8px;letter-spacing:.045em}
+      .budget-stat strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .tip-card{padding:13px;border-radius:17px}
+      .tip-icon{width:34px;height:34px}
+      .expense-section{padding-top:20px}
+      .expense-category{border-radius:19px;margin-bottom:11px}
+      .category-head{padding:14px}
+      .expense-row{padding:13px 14px;grid-template-columns:minmax(0,1fr) auto 32px}
+      .add-line{min-height:44px}
+      .bottom-nav{
+        left:max(12px,env(safe-area-inset-left));
+        right:max(12px,env(safe-area-inset-right));
+        bottom:max(10px,env(safe-area-inset-bottom));
+        transform:none;
+        width:auto;
+        height:70px;
+        border-radius:27px;
+        padding:0 8px;
+        grid-template-columns:1fr 1fr 68px 1fr 1fr;
+      }
+      .nav-item{height:52px;min-width:44px;font-size:8px;border-radius:15px}
+      .nav-item .nav-glyph{font-size:17px}
+      .fab{
+        bottom:calc(max(10px,env(safe-area-inset-bottom)) + 16px);
+        width:50px;height:50px;font-size:25px;border-width:3px;
+      }
+      .modal-layer{place-items:end center;padding:0}
+      .modal{
+        width:100%;
+        max-width:none;
+        max-height:92dvh;
+        border-radius:30px 30px 0 0;
+        padding-bottom:env(safe-area-inset-bottom);
+        transform:translateY(20px);
+      }
+      .modal-head{padding:22px 18px 10px}
+      .modal-body{padding:10px 18px 20px}
+      .fields{grid-template-columns:1fr;gap:10px}
+      .field input,.field select,.cat-row input{font-size:16px;min-height:46px}
+      .cat-row{grid-template-columns:minmax(0,1fr) 102px 38px;gap:7px}
+      .remove-cat{min-height:44px}
+      .small-btn{min-height:38px}
+      .modal-actions{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(255,234,244,0),#ffeaf4 24%);padding-top:14px;padding-bottom:4px}
+      .btn{min-height:46px;padding:11px 14px}
+      .toast{
+        top:calc(68px + env(safe-area-inset-top));
+        left:14px;right:14px;text-align:center;border-radius:14px;
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="app">
+    <header class="appbar">
+      <div class="bar-left" id="barLeft"></div>
+      <div class="screen-title" id="screenTitle">Tripex Manager</div>
+      <div class="bar-right" id="barRight"></div>
+    </header>
+    <main id="appContent"></main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Primary navigation">
+    <button class="nav-item active" id="navHome"><span class="nav-glyph">⌂</span><span>Home</span></button>
+    <button class="nav-item" id="navTrips"><span class="nav-glyph">▣</span><span>Trips</span></button>
+    <div class="nav-spacer"></div>
+    <button class="nav-item" id="navBudget"><span class="nav-glyph">◔</span><span>Budget</span></button>
+    <button class="nav-item" id="navSettings"><span class="nav-glyph">⚙</span><span>Settings</span></button>
+  </nav>
+  <button class="fab" id="globalAdd" aria-label="Add">＋</button>
+
+  <div class="modal-layer" id="tripModal">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="tripModalTitle">
+      <div class="modal-head">
+        <div><h2 id="tripModalTitle">New trip</h2><p>Name your trip and give each expense category a limit.</p></div>
+        <button class="modal-close" data-close="tripModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="fields">
+          <div class="field"><label>Trip name</label><input id="tripName" placeholder="e.g. Bali escape" /></div>
+          <div class="field"><label>Currency</label><select id="tripCurrency"><option>USD</option><option>EUR</option><option>GBP</option><option>INR</option><option>JPY</option><option>AUD</option></select></div>
+          <div class="field"><label>Start date</label><input id="tripStart" type="date" /></div>
+          <div class="field"><label>End date</label><input id="tripEnd" type="date" /></div>
+        </div>
+        <div class="builder">
+          <div class="builder-title"><strong>Expense categories</strong><button class="small-btn" id="addCategory">＋ Add category</button></div>
+          <div id="categoryBuilder"></div>
+          <div class="builder-total"><span>Total budget</span><strong id="builderTotal">$0</strong></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn danger" id="deleteTrip" style="display:none">Delete trip</button>
+          <button class="btn secondary" data-close="tripModal">Cancel</button>
+          <button class="btn primary" id="saveTrip">Create trip</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-layer" id="expenseModal">
+    <section class="modal" style="width:min(510px,100%)" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
+      <div class="modal-head">
+        <div><h2 id="expenseModalTitle">Add expense</h2><p>Log a purchase and your budget will update immediately.</p></div>
+        <button class="modal-close" data-close="expenseModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="fields">
+          <div class="field full"><label>Category</label><select id="expenseCategory"></select></div>
+          <div class="field full"><label>Description</label><input id="expenseDescription" placeholder="e.g. Airport taxi" /></div>
+          <div class="field"><label>Amount</label><input id="expenseAmount" type="number" min="0" step="0.01" placeholder="0.00" /></div>
+          <div class="field"><label>Date</label><input id="expenseDate" type="date" /></div>
+        </div>
+        <div class="modal-actions"><button class="btn secondary" data-close="expenseModal">Cancel</button><button class="btn primary" id="saveExpense">Add expense</button></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'wanderBudgetTripsV1';
+  const ACTIVE_KEY = 'wanderBudgetActiveTripV1';
+  let trips = loadTrips();
+  let activeTripId = localStorage.getItem(ACTIVE_KEY) || null;
+  let view = 'home';
+  let editingTripId = null;
+  let preselectedCategoryId = null;
+  const $ = id => document.getElementById(id);
+
+  function uid(prefix='id'){return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`}
+  function escapeHtml(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+  function loadTrips(){
+    try{
+      const data=JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if(Array.isArray(data)) return data.filter(t=>!['trip_kyoto','trip_lisbon'].includes(t.id));
+    }catch(e){}
+    return [];
+  }
+  function persist(){localStorage.setItem(STORAGE_KEY,JSON.stringify(trips)); if(activeTripId)localStorage.setItem(ACTIVE_KEY,activeTripId);else localStorage.removeItem(ACTIVE_KEY)}
+  function activeTrip(){return trips.find(t=>t.id===activeTripId)||null}
+  function catSpent(c){return (c.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0)}
+  function budget(t){return (t.categories||[]).reduce((s,c)=>s+Number(c.limit||0),0)}
+  function spent(t){return (t.categories||[]).reduce((s,c)=>s+catSpent(c),0)}
+  function money(v,c='USD'){return new Intl.NumberFormat(undefined,{style:'currency',currency:c,maximumFractionDigits:c==='JPY'?0:2}).format(Number(v||0))}
+  function fmtDate(v){if(!v)return 'No date';return new Intl.DateTimeFormat(undefined,{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v+'T12:00:00'))}
+  function range(t){if(t.startDate&&t.endDate)return `${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}`;return fmtDate(t.startDate||t.endDate)}
+  function tripStatus(t){
+    const now=new Date(); now.setHours(0,0,0,0);
+    const s=t.startDate?new Date(t.startDate+'T00:00:00'):null;
+    const e=t.endDate?new Date(t.endDate+'T23:59:59'):null;
+    if(s&&now<s)return 'Planned'; if(e&&now>e)return 'Completed'; if(s&&e)return 'Ongoing'; return 'Planned';
+  }
+  function dayCount(t){if(!t.startDate||!t.endDate)return null;return Math.max(1,Math.round((new Date(t.endDate)-new Date(t.startDate))/86400000)+1)}
+  function hashName(name=''){return [...name].reduce((a,c)=>a+c.charCodeAt(0),0)%4}
+
+  function setBar(title,{back=false,edit=false,add=false}={}){
+    $('screenTitle').textContent=title;
+    $('barLeft').innerHTML=back?`<button class="icon-btn" id="backBtn" aria-label="Back">‹</button>`:'';
+    $('barRight').innerHTML=edit?`<button class="icon-btn" id="editBtn" aria-label="Edit">✎</button>`:add?`<button class="icon-btn" id="topAddBtn" aria-label="Add trip">＋</button>`:`<div class="avatar">T</div>`;
+    if(back)$('backBtn').onclick=()=>go(view==='detail'?'trips':'home');
+    if(edit)$('editBtn').onclick=()=>openTripModal(activeTripId);
+    if(add)$('topAddBtn').onclick=()=>openTripModal();
+  }
+
+  function updateNav(){
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    if(view==='home')$('navHome').classList.add('active');
+    else if(view==='trips'||view==='detail')$('navTrips').classList.add('active');
+    else if(view==='budget')$('navBudget').classList.add('active');
+    else $('navSettings').classList.add('active');
+  }
+
+  function go(next,id=null){
+    if(id)activeTripId=id;
+    view=next; persist(); render(); window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function render(){
+    updateNav();
+    if(view==='home')renderHome();
+    else if(view==='trips')renderTrips();
+    else if(view==='detail')renderDetail();
+    else if(view==='budget')renderBudget();
+    else renderSettings();
+  }
+
+  function renderHome(){
+    setBar('Tripex Manager',{add:trips.length>0});
+    if(!trips.length){
+      $('appContent').innerHTML=`<section class="page empty-home"><button class="empty-add" id="firstTrip"><div><div class="add-circle">＋</div><strong>Add your first trip</strong><span>Create a trip and set category budgets</span></div></button></section>`;
+      $('firstTrip').onclick=()=>openTripModal(); return;
+    }
+    const recent=trips.slice(-6).reverse();
+    $('appContent').innerHTML=`<div class="page"><section class="section"><div class="section-head"><div><h2>Recent trips</h2><p>Tap a trip to view expenses and budget</p></div><button class="pill-btn" id="addFromHome">＋ Add trip</button></div><div class="trip-grid">${recent.map(tripCard).join('')}</div></section></div>`;
+    $('addFromHome').onclick=()=>openTripModal();
+    document.querySelectorAll('[data-trip]').forEach(el=>el.onclick=()=>go('detail',el.dataset.trip));
+  }
+
+  function tripCard(t){
+    const pct=budget(t)?Math.min(100,spent(t)/budget(t)*100):0;
+    return `<button class="trip-card" data-trip="${t.id}"><div class="trip-card-copy"><h3>${escapeHtml(t.name)}</h3><p>${escapeHtml(range(t))}</p><div class="mini-progress"><span style="width:${pct}%"></span></div><div class="mini-meta"><span>${money(spent(t),t.currency)} spent</span><span>${Math.round(pct)}%</span></div></div></button>`;
+  }
+
+  function renderTrips(){
+    setBar('Trips',{add:true});
+    if(!trips.length){$('appContent').innerHTML=`<section class="page empty-home"><button class="empty-add" id="firstTrip"><div><div class="add-circle">＋</div><strong>Add your first trip</strong><span>Create a trip and set category budgets</span></div></button></section>`;$('firstTrip').onclick=()=>openTripModal();return}
+    $('appContent').innerHTML=`<div class="page trip-list">${trips.slice().reverse().map(t=>`<button class="trip-row" data-trip="${t.id}"><div class="trip-row-copy"><div><h3>${escapeHtml(t.name)}</h3><div class="meta-line">⌖ <span>${escapeHtml(t.categories.length+' expense categories')}</span></div><div class="meta-line">▣ <span>${escapeHtml(range(t))}</span></div><div class="meta-line">◉ <span>${money(spent(t),t.currency)} / ${money(budget(t),t.currency)}</span></div></div><span class="status ${tripStatus(t).toLowerCase()}">${tripStatus(t)}</span></div></button>`).join('')}</div>`;
+    document.querySelectorAll('[data-trip]').forEach(el=>el.onclick=()=>go('detail',el.dataset.trip));
+  }
+
+  function recommendation(t){
+    const totalBudget=budget(t), totalSpent=spent(t), remain=totalBudget-totalSpent;
+    const overCats=t.categories.filter(c=>catSpent(c)>Number(c.limit||0));
+    const room=t.categories.map(c=>({name:c.name,room:Math.max(0,Number(c.limit||0)-catSpent(c))})).filter(x=>x.room>0).sort((a,b)=>b.room-a.room);
+    if(totalSpent>totalBudget){
+      const over=totalSpent-totalBudget;
+      const best=room.slice(0,2).map(x=>x.name).join(' and ');
+      return {over:true,title:`Trip is ${money(over,t.currency)} over budget`,text:best?`Actual spending is already above the total limit. Keep the remaining ${best} budget at zero where possible to avoid widening the gap.`:`Actual spending has exceeded the total trip budget. Avoid discretionary purchases for the rest of the trip.`};
+    }
+    if(overCats.length){
+      const overAmt=overCats.reduce((s,c)=>s+(catSpent(c)-Number(c.limit||0)),0);
+      const best=room.slice(0,2).map(x=>`${x.name} (${money(x.room,t.currency)} left)`).join(' and ');
+      return {over:false,title:`You still have ${money(remain,t.currency)} of total wiggle room`,text:best?`${overCats.map(c=>c.name).join(', ')} exceeded its category limit by ${money(overAmt,t.currency)}. You can absorb that by spending less in ${best}.`:`Some categories are over their limits, but your total trip is still within budget.`};
+    }
+    const days=dayCount(t); const daily=days?remain/days:null;
+    return {over:false,title:`You're ${money(remain,t.currency)} under budget`,text:daily?`You have roughly ${money(daily,t.currency)} of remaining budget per planned trip day. Your largest flexibility is in ${room[0]?.name||'your unspent categories'}.`:`Your categories are currently within their limits. Keep logging expenses to maintain an accurate forecast.`};
+  }
+
+  function renderDetail(){
+    const t=activeTrip(); if(!t){go('trips');return}
+    setBar(t.name,{back:true,edit:true});
+    const b=budget(t),s=spent(t),rem=b-s,pct=b?Math.round(s/b*100):0,tip=recommendation(t);
+    $('appContent').innerHTML=`<div class="page detail-wrap"><section class="detail-info"><div class="detail-title-row"><h1>${escapeHtml(t.name)}</h1><span class="status ${tripStatus(t).toLowerCase()}">${tripStatus(t)}</span></div><div class="detail-meta"><div class="meta-line">⌖ <span>${t.categories.length} budget categories</span></div><div class="meta-line">▣ <span>${escapeHtml(range(t))}</span></div><div class="meta-line">◉ <span>${money(b,t.currency)} planned budget</span></div></div></section><section class="budget-card"><div class="budget-top"><div><h3>Trip budget</h3><p>${pct<=100?'You are currently within your total limit.':'Your spending has passed the trip limit.'}</p></div><div class="budget-money"><strong>${money(s,t.currency)}</strong><span>of ${money(b,t.currency)}</span></div></div><div class="progress"><span class="${pct>100?'warn':''}" style="width:${Math.min(100,pct)}%"></span></div><div class="progress-labels"><span>${Math.min(100,pct)}% used</span><span>${rem>=0?money(rem,t.currency)+' left':money(Math.abs(rem),t.currency)+' over'}</span></div><div class="budget-stats"><div class="budget-stat"><span>Spent</span><strong>${money(s,t.currency)}</strong></div><div class="budget-stat"><span>Remaining</span><strong>${money(Math.max(0,rem),t.currency)}</strong></div><div class="budget-stat"><span>Categories</span><strong>${t.categories.length}</strong></div></div></section><section class="tip-card ${tip.over?'over':''}"><div class="tip-icon">${tip.over?'!':'✦'}</div><div><strong>${escapeHtml(tip.title)}</strong><p>${escapeHtml(tip.text)}</p></div></section><section class="expense-section"><div class="section-head"><div><h2>Expenses</h2><p>Every category has its own budget and expense list</p></div><button class="pill-btn" id="detailAddExpense">＋ Add expense</button></div>${t.categories.map(c=>categoryHtml(t,c)).join('')}</section></div>`;
+    $('detailAddExpense').onclick=()=>openExpenseModal();
+    document.querySelectorAll('[data-add-cat]').forEach(b=>b.onclick=()=>openExpenseModal(b.dataset.addCat));
+    document.querySelectorAll('[data-delete-expense]').forEach(b=>b.onclick=()=>deleteExpense(b.dataset.cat,b.dataset.deleteExpense));
+  }
+
+  function categoryHtml(t,c){
+    const cs=catSpent(c),limit=Number(c.limit||0),pct=limit?Math.round(cs/limit*100):0;
+    return `<article class="expense-category"><div class="category-head"><div><h3>${escapeHtml(c.name)}</h3><p>Limit ${money(limit,t.currency)}</p></div><div class="category-money"><strong>${money(cs,t.currency)}</strong><span>${pct>100?money(cs-limit,t.currency)+' over':money(Math.max(0,limit-cs),t.currency)+' left'}</span></div></div><div class="cat-progress"><span class="${pct>100?'over':''}" style="width:${Math.min(100,pct)}%"></span></div><div>${(c.expenses||[]).length?(c.expenses||[]).map(e=>`<div class="expense-row"><div class="expense-name"><strong>${escapeHtml(e.description||c.name)}</strong><span>${fmtDate(e.date)} · ${escapeHtml(c.name)}</span></div><div class="expense-amount">${money(e.amount,t.currency)}</div><button class="delete-expense" data-cat="${c.id}" data-delete-expense="${e.id}" title="Delete">×</button></div>`).join(''):`<div class="no-expense">No expenses added yet</div>`}</div><button class="add-line" data-add-cat="${c.id}">＋ Add expense to ${escapeHtml(c.name)}</button></article>`;
+  }
+
+  function renderBudget(){
+    setBar('Budget');
+    if(!trips.length){$('appContent').innerHTML=`<section class="page empty-home"><button class="empty-add" id="firstTrip"><div><div class="add-circle">＋</div><strong>Add a trip first</strong><span>Your budget overview will appear here</span></div></button></section>`;$('firstTrip').onclick=()=>openTripModal();return}
+    const totalB=trips.reduce((s,t)=>s+budget(t),0), totalS=trips.reduce((s,t)=>s+spent(t),0);
+    $('appContent').innerHTML=`<div class="page section"><div class="section-head"><div><h2>Budget overview</h2><p>Choose a trip for detailed advice</p></div></div><div class="budget-card"><div class="budget-top"><div><h3>Across all trips</h3><p>Combined spending progress</p></div><div class="budget-money"><strong>${money(totalS,'USD')}</strong><span>values shown numerically across mixed currencies</span></div></div><div class="progress"><span style="width:${Math.min(100,totalB?totalS/totalB*100:0)}%"></span></div></div><div class="trip-list">${trips.map(t=>`<button class="trip-row" data-trip="${t.id}"><div class="trip-row-copy"><div><h3>${escapeHtml(t.name)}</h3><div class="meta-line">◉ <span>${money(spent(t),t.currency)} of ${money(budget(t),t.currency)}</span></div><div class="meta-line">✦ <span>${escapeHtml(recommendation(t).title)}</span></div></div><span class="status ${tripStatus(t).toLowerCase()}">${tripStatus(t)}</span></div></button>`).join('')}</div></div>`;
+    document.querySelectorAll('[data-trip]').forEach(el=>el.onclick=()=>go('detail',el.dataset.trip));
+  }
+
+  function renderSettings(){
+    setBar('Settings');
+    $('appContent').innerHTML=`<div class="page section"><div class="budget-card"><div class="section-head"><div><h2>Local-first by design</h2><p>Your trip data stays in this browser.</p></div></div><p style="font-size:12px;color:var(--muted);line-height:1.7;margin:0">Tripex currently stores all trips and expenses using browser localStorage, which makes this file easy to host on GitHub Pages without a backend. Clearing browser site data will remove saved trips, so export/import can be added later if you want cloud-independent backups.</p></div></div>`;
+  }
+
+  function openTripModal(id=null){
+    editingTripId=id; const t=id?trips.find(x=>x.id===id):null;
+    $('tripModalTitle').textContent=t?'Edit trip':'New trip';
+    $('saveTrip').textContent=t?'Save changes':'Create trip';
+    $('deleteTrip').style.display=t?'inline-block':'none';
+    $('tripName').value=t?.name||''; $('tripCurrency').value=t?.currency||'USD'; $('tripStart').value=t?.startDate||''; $('tripEnd').value=t?.endDate||'';
+    $('categoryBuilder').innerHTML='';
+    const cats=t?.categories?.length?t.categories.map(c=>({id:c.id,name:c.name,limit:c.limit,expenses:c.expenses||[]})):[{name:'Stay',limit:0},{name:'Food',limit:0},{name:'Transport',limit:0},{name:'Experiences',limit:0},{name:'Shopping',limit:0}];
+    cats.forEach(c=>addCatRow(c)); updateBuilderTotal(); $('tripModal').classList.add('show'); setTimeout(()=>$('tripName').focus(),80);
+  }
+  function addCatRow(c={name:'',limit:0}){
+    const row=document.createElement('div'); row.className='cat-row'; row.dataset.id=c.id||''; row.dataset.expenses=JSON.stringify(c.expenses||[]);
+    row.innerHTML=`<input class="cat-name" placeholder="Category" value="${escapeHtml(c.name||'')}"/><input class="cat-limit" type="number" min="0" step="0.01" placeholder="Limit" value="${Number(c.limit||0)||''}"/><button class="remove-cat" type="button">×</button>`;
+    row.querySelector('.remove-cat').onclick=()=>{if(document.querySelectorAll('.cat-row').length>1){row.remove();updateBuilderTotal()}};
+    row.querySelector('.cat-limit').oninput=updateBuilderTotal; $('categoryBuilder').appendChild(row);
+  }
+  function updateBuilderTotal(){const total=[...document.querySelectorAll('.cat-limit')].reduce((s,i)=>s+Number(i.value||0),0);$('builderTotal').textContent=money(total,$('tripCurrency').value||'USD')}
+  function saveTrip(){
+    const name=$('tripName').value.trim(); if(!name){toast('Give your trip a name');return}
+    const rows=[...document.querySelectorAll('.cat-row')].map(r=>({id:r.dataset.id||uid('cat'),name:r.querySelector('.cat-name').value.trim()||'Other',limit:Number(r.querySelector('.cat-limit').value||0),expenses:JSON.parse(r.dataset.expenses||'[]')}));
+    const obj={id:editingTripId||uid('trip'),name,currency:$('tripCurrency').value,startDate:$('tripStart').value,endDate:$('tripEnd').value,categories:rows};
+    if(editingTripId){const i=trips.findIndex(t=>t.id===editingTripId);trips[i]=obj}else trips.push(obj);
+    activeTripId=obj.id; persist(); closeModal('tripModal'); go('detail',obj.id); toast(editingTripId?'Trip updated':'Trip created');
+  }
+  function deleteTrip(){if(!editingTripId)return;if(!confirm('Delete this trip and all of its expenses?'))return;trips=trips.filter(t=>t.id!==editingTripId);if(activeTripId===editingTripId)activeTripId=null;persist();closeModal('tripModal');go('home');toast('Trip deleted')}
+
+  function openExpenseModal(catId=null){
+    const t=activeTrip(); if(!t){if(trips.length===1){activeTripId=trips[0].id}else{toast('Open a trip first');go('trips');return}}
+    const trip=activeTrip(); preselectedCategoryId=catId;
+    $('expenseCategory').innerHTML=trip.categories.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    if(catId)$('expenseCategory').value=catId; $('expenseDescription').value=''; $('expenseAmount').value=''; $('expenseDate').value=new Date().toISOString().slice(0,10); $('expenseModal').classList.add('show'); setTimeout(()=>$('expenseDescription').focus(),80);
+  }
+  function saveExpense(){
+    const t=activeTrip(); if(!t)return; const cat=t.categories.find(c=>c.id===$('expenseCategory').value); const amount=Number($('expenseAmount').value||0); if(!cat||amount<=0){toast('Enter a valid expense amount');return}
+    cat.expenses=cat.expenses||[];cat.expenses.push({id:uid('exp'),description:$('expenseDescription').value.trim()||cat.name,amount,date:$('expenseDate').value});persist();closeModal('expenseModal');go('detail',t.id);toast('Expense added')
+  }
+  function deleteExpense(catId,expId){const t=activeTrip();const c=t?.categories.find(x=>x.id===catId);if(!c)return;c.expenses=(c.expenses||[]).filter(e=>e.id!==expId);persist();render();toast('Expense removed')}
+  function closeModal(id){$(id).classList.remove('show')}
+  function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>$('toast').classList.remove('show'),2200)}
+
+  $('navHome').onclick=()=>go('home');
+  $('navTrips').onclick=()=>go('trips');
+  $('navBudget').onclick=()=>go('budget');
+  $('navSettings').onclick=()=>go('settings');
+  $('globalAdd').onclick=()=>{if(view==='detail'&&activeTrip())openExpenseModal();else openTripModal()};
+  $('addCategory').onclick=()=>addCatRow();
+  $('tripCurrency').onchange=updateBuilderTotal;
+  $('saveTrip').onclick=saveTrip;
+  $('deleteTrip').onclick=deleteTrip;
+  $('saveExpense').onclick=saveExpense;
+  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+  document.querySelectorAll('.modal-layer').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id)}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-layer.show').forEach(m=>closeModal(m.id))});
+
+  view='home';
+  render();
+})();
+</script>
+</body>
+</html>
